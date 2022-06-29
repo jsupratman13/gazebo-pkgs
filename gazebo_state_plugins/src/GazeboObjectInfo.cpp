@@ -1,6 +1,7 @@
 #include <gazebo_state_plugins/GazeboObjectInfo.h>
 #include <gazebo_version_helpers/GazeboVersionHelpers.h>
 #include <object_msgs_tools/ObjectFunctions.h>
+#include <gazebo/rendering/rendering.hh>
 #include <gazebo/physics/Link.hh>
 #include <gazebo/physics/BoxShape.hh>
 #include <gazebo/physics/SphereShape.hh>
@@ -105,7 +106,7 @@ void GazeboObjectInfo::onWorldUpdate() {
 }
 
 
-shape_msgs::SolidPrimitive * GazeboObjectInfo::getSolidPrimitive(physics::CollisionPtr& c) {
+shape_msgs::SolidPrimitive * GazeboObjectInfo::getSolidPrimitive(physics::CollisionPtr& c, physics::ModelPtr& m) {
     shape_msgs::SolidPrimitive solid;
     msgs::Geometry geom;
     physics::ShapePtr shape=c->GetShape();
@@ -157,7 +158,10 @@ shape_msgs::SolidPrimitive * GazeboObjectInfo::getSolidPrimitive(physics::Collis
     else
     {
         ROS_WARN("shape type %i of collision %s not supported. Using bounding box instead. ", c->GetShapeType(),c->GetName().c_str());
-        GzBox box = GetBoundingBox(*c);
+        gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene();
+        rendering::VisualPtr visual = scene->GetVisual(m->GetName().c_str());
+        GzBox box = GetBoundingBox(*visual);
+        //GzBox box = GetBoundingBox(*c);
         GzVector3 bb = GetBoundingBoxDimensions(box);
         if ((GetX(bb) < 1e-05) || (GetY(bb) < 1e-05) || (GetZ(bb) < 1e-05)){
             ROS_WARN_ONCE("Skipping coll %s because its bounding box is flat",c->GetName().c_str());
@@ -228,7 +232,7 @@ GazeboObjectInfo::ObjectMsg GazeboObjectInfo::createBoundingBoxObject(physics::M
     
             if (include_shape) {
 
-                shape_msgs::SolidPrimitive * solid=getSolidPrimitive(c);
+                shape_msgs::SolidPrimitive * solid=getSolidPrimitive(c, model);
                 if (!solid) {
                     ROS_WARN("Skipping coll %s of link %s of model %s, could not get SolidPrimitive. ",c->GetName().c_str(),linkName.c_str(),obj.name.c_str());
                     continue;

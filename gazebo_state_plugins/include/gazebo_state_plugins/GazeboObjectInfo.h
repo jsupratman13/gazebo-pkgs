@@ -66,7 +66,7 @@ private:
 	//publishes a model made up of its bounding boxes
 	void onWorldUpdate(); 
 
-	shape_msgs::SolidPrimitive * getSolidPrimitive(physics::CollisionPtr& c); 
+	shape_msgs::SolidPrimitive * getSolidPrimitive(physics::CollisionPtr& c, physics::ModelPtr& m); 
 
 	//returns a model made up of its bounding boxes
 	ObjectMsg createBoundingBoxObject(physics::ModelPtr& model, bool include_shape);
